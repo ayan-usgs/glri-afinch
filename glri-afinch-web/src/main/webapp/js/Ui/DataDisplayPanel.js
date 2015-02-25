@@ -56,14 +56,20 @@ AFINCH.ui.DataDisplayPanel = Ext.extend(Ext.Panel, {
 	doInitLoad: function() {
 		//establish scope
 		var self = this;
-
 		self.sosUrlWithoutBase = self.thredds_filename + 
 				'?service=SOS&request=GetObservation&Version=1.0.0&offering=' +
 				self.record.data[self.id_prop] +
 				'&observedProperty=' + self.observed_prop;
-
+		// interim fix for GLRI-AFINCH while it lives at glridev, glriqa, and glriprod
+		// can be removed once glridev, glriqa, and glriprod have their own thredds
+		// servers. For the time being, they still point back to wsprod.
+		var parser = document.createElement('a');
+		parser.href = CONFIG.endpoint.thredds;
+		var threddsServer = 'http://' + parser.host + '/glri-afinch/';
+		// end interim fix
 		Ext.Ajax.request({
-			url: CONFIG.endpoint.threddsProxy + self.sosUrlWithoutBase,
+			// url: CONFIG.endpoint.threddsProxy + self.sosUrlWithoutBase, 
+			url: threddsServer + CONFIG.endpoint.threddsProxy + self.sosUrlWithoutBase, // also a part of the interim fix
 			success: self.sosCallback,
 			scope: self
 		});
@@ -225,6 +231,8 @@ AFINCH.ui.DataDisplayPanel = Ext.extend(Ext.Panel, {
 			self.graphData.values = AFINCH.data.parseSosResponse(responseTxt, numFieldsToLoadLater);
 
 			//kick off the next ajax call...
+			console.log('Thredds URL:');
+			console.log(CONFIG.endpoint.thredds);
 			var rParams = {
 				sosEndpointUrl: CONFIG.endpoint.thredds + self.sosUrlWithoutBase
 			};
